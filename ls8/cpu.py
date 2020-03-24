@@ -15,26 +15,44 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
 
-    def load(self):
+    def load(self, filepath):
         """Load a program into memory."""
-
+        program = []
         address = 0
+        try:
+            with open(filepath, 'r') as f:
+                for line in f:
+                    # Ignore comments
+                    comment_split = line.split("#")
+                    # Strip out whitespace
+                    num = comment_split[0].strip()
+                    # Ignore blank lines
+                    if num == '':
+                        continue
+                    program.append('0b' + num)
+                    # print(program)
+            for instruction in program:
+                self.ram[address] = eval(instruction)
+                address += 1
 
-        # For now, we've just hardcoded a program:
+        except FileNotFoundError:
+            print("File not found")
+            sys.exit(2)
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # # For now, we've just hardcoded a program:
+        # address = 0
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -105,5 +123,5 @@ class CPU:
                 sys.exit(1)
 
 test = CPU()
-test.load()
+test.load("examples/print8.ls8")
 test.run()
