@@ -2,9 +2,10 @@
 
 import sys
 
-HLT = 1
-LDI = 130
-PRN = 71
+HLT = 1     # 0b00000001
+LDI = 130   # 0b10000010 
+PRN = 71    # 0b01000111
+MUL = 162   # 0b10100010
 
 class CPU:
     """Main CPU class."""
@@ -108,15 +109,33 @@ class CPU:
                 self.pc += 1
 
             elif command == LDI:
+                # load a piece of data in to the register
+                # register address in self.pc + 1
+                # data to load in register in self.pc + 2
                 reg_addr = self.ram[self.pc + 1] 
                 data = self.ram[self.pc + 2]
                 self.reg[reg_addr] = data
                 self.pc += 3
 
             elif command == PRN:
+                # print argument stored in register
+                # register address at self.pc + 1
                 reg_addr = self.ram[self.pc + 1] 
                 print(self.reg[reg_addr])
                 self.pc += 2
+
+            elif command == MUL:
+                # multiply operands a and b stored in the register
+                # register addresses for operand a in self.pc + 1 
+                # register address for operand b in self.pc + 2
+                # return result to R0
+                op_a_addr = self.ram[self.pc + 1]
+                op_b_addr = self.ram[self.pc + 2]
+                op_a = self.reg[op_a_addr]
+                op_b = self.reg[op_b_addr]
+                result = op_a * op_b
+                self.reg[0] = result
+                self.pc += 3
 
             else:
                 print(f"Unknown instruction: {command}")
