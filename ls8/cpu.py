@@ -121,7 +121,3 @@ class CPU:
             else:
                 print(f"Unknown instruction: {command}")
                 sys.exit(1)
-
-test = CPU()
-test.load("examples/print8.ls8")
-test.run()
