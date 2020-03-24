@@ -61,7 +61,8 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -129,13 +130,19 @@ class CPU:
                 # register addresses for operand a in self.pc + 1 
                 # register address for operand b in self.pc + 2
                 # return result to R0
+                # implement with ALU
                 op_a_addr = self.ram[self.pc + 1]
                 op_b_addr = self.ram[self.pc + 2]
-                op_a = self.reg[op_a_addr]
-                op_b = self.reg[op_b_addr]
-                result = op_a * op_b
-                self.reg[0] = result
+                self.alu("MUL", op_a_addr, op_b_addr)
                 self.pc += 3
+                # implement with direct code
+                # op_a_addr = self.ram[self.pc + 1]
+                # op_b_addr = self.ram[self.pc + 2]
+                # op_a = self.reg[op_a_addr]
+                # op_b = self.reg[op_b_addr]
+                # result = op_a * op_b
+                # self.reg[0] = result
+                # self.pc += 3
 
             else:
                 print(f"Unknown instruction: {command}")
