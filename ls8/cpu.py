@@ -2,12 +2,18 @@
 
 import sys
 
+HLT = 1
+LDI = 130
+PRN = 71
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
 
     def load(self):
         """Load a program into memory."""
@@ -60,6 +66,44 @@ class CPU:
 
         print()
 
+    def ram_read(self, address):
+        """
+        read a byte from RAM
+        """
+        return self.ram[address]
+
+    def ram_write(self, address, byte):
+        """
+        write a byte to RAM
+        """
+        self.ram[address] = byte
+
     def run(self):
         """Run the CPU."""
-        pass
+        running = True
+        self.pc = 0
+        while running:
+            command = self.ram[self.pc]
+
+            if command == HLT:
+                running = False
+                self.pc += 1
+
+            elif command == LDI:
+                reg_addr = self.ram[self.pc + 1] 
+                data = self.ram[self.pc + 2]
+                self.reg[reg_addr] = data
+                self.pc += 3
+
+            elif command == PRN:
+                reg_addr = self.ram[self.pc + 1] 
+                print(self.reg[reg_addr])
+                self.pc += 2
+
+            else:
+                print(f"Unknown instruction: {command}")
+                sys.exit(1)
+
+test = CPU()
+test.load()
+test.run()
