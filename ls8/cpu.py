@@ -2,19 +2,28 @@
 
 import sys
 
-HLT = 1     # 0b00000001
-LDI = 130   # 0b10000010 
-PRN = 71    # 0b01000111
-MUL = 162   # 0b10100010
+HLT  = 1    # 0b00000001
+LDI  = 130  # 0b10000010 
+PRN  = 71   # 0b01000111
+MUL  = 162  # 0b10100010
+PUSH = 69   # 0b01000101
+POP  = 70   # 0b01000110
 
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
+        # 256 bytes of RAM
         self.ram = [0] * 256
+        # 8 bytes of register
         self.reg = [0] * 8
+        # program counter
         self.pc = 0
+        # stack pointer register address (default to 7)
+        self.sp = 7
+        # stack pointer initialiaed to high memory address from RAM
+        self.reg[self.sp] = 255
 
     def load(self, filepath):
         """Load a program into memory."""
@@ -144,6 +153,30 @@ class CPU:
                 # self.reg[0] = result
                 # self.pc += 3
 
+            elif command == PUSH:
+                # moves an item from the register address at pc + 1 into the stack
+                # decrements the memory address stored in the stack pointer
+                reg_addr = self.ram[self.pc + 1]
+                # get value to place in stack from register address at pc + 1
+                value = self.reg[reg_addr]
+                # decrement the memory address stored in the stack pointer
+                self.reg[self.sp] -= 1
+                # copy the value onto the stack in memory
+                self.ram[self.reg[self.sp]] = value
+                self.pc += 2
+
+            elif command == POP:
+                # move an item off the stack and into the register address at pc + 1
+                # increments the memory address stored in the stack pointer
+                reg_addr = self.ram[self.pc + 1]
+                # get value to place in register from stack
+                value = self.ram[self.reg[self.sp]]
+                # copy the value to the register address
+                self.reg[reg_addr] = value
+                # increment the memory address stored in the stack pointer
+                self.reg[self.sp] += 1
+                self.pc += 2
+
             else:
                 print(f"Unknown instruction: {command}")
-                sys.exit(1)
+                sys.exit(1)  
