@@ -3,11 +3,14 @@
 import sys
 
 HLT  = 1    # 0b00000001
-LDI  = 130  # 0b10000010 
+RET  = 17   # 0b00010001
 PRN  = 71   # 0b01000111
-MUL  = 162  # 0b10100010
 PUSH = 69   # 0b01000101
 POP  = 70   # 0b01000110
+CALL = 80   # 0b01010000
+LDI  = 130  # 0b10000010 
+ADD  = 160  # 0b10100000
+MUL  = 162  # 0b10100010
 
 class CPU:
     """Main CPU class."""
@@ -24,6 +27,10 @@ class CPU:
         self.sp = 7
         # stack pointer initialiaed to high memory address from RAM
         self.reg[self.sp] = 255
+        # instruction register for address of currently executing subroutine
+        self.ir = 0
+        # flag for 00000LGE for less, greater, equal comparisons
+        self.flag = 0b00000000
 
     def load(self, filepath):
         """Load a program into memory."""
@@ -72,6 +79,14 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "CMP":
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.flag = 0b00000100
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.flag = 0b00000010
+            elif self.reg[reg_a] == self.reg[reg_b]:
+                self.flag = 0b00000001
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -134,6 +149,17 @@ class CPU:
                 print(self.reg[reg_addr])
                 self.pc += 2
 
+            elif command == ADD:
+                # adds operands a and b stored in the register
+                # register addresses for operand a in self.pc + 1 
+                # register address for operand b in self.pc + 2
+                # return result to R0
+                # implement with ALU
+                op_a_addr = self.ram[self.pc + 1]
+                op_b_addr = self.ram[self.pc + 2]
+                self.alu("ADD", op_a_addr, op_b_addr)
+                self.pc += 3
+
             elif command == MUL:
                 # multiply operands a and b stored in the register
                 # register addresses for operand a in self.pc + 1 
@@ -176,6 +202,24 @@ class CPU:
                 # increment the memory address stored in the stack pointer
                 self.reg[self.sp] += 1
                 self.pc += 2
+
+            elif command == CALL:
+                # The address of the instruction directly after CALL is pushed onto the stack.
+                # the place to return is at pc + 2
+                # This allows us to return to where we left off when the subroutine finishes executing.
+                self.reg[self.sp] -= 1
+                self.ram[self.reg[self.sp]] = self.pc + 2
+                # The PC is set to the address stored in the given register.
+                # We jump to that location in RAM and execute the first instruction in the subroutine.
+                # The PC can move forward or backwards from its current location.
+                self.pc = self.reg[self.ram[self.pc + 1]]
+
+            elif command == RET:
+                # Return from subroutine.
+                # Pop the value from the top of the stack and store it in the PC.
+                self.pc = self.ram[self.reg[self.sp]]
+                self.reg[self.sp] += 1
+
 
             else:
                 print(f"Unknown instruction: {command}")
