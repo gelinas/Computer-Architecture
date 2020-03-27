@@ -60,23 +60,7 @@ class CPU:
             print("File not found")
             sys.exit(2)
 
-        # # For now, we've just hardcoded a program:
-        # address = 0
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
-
-
-    def alu(self, op, reg_a, reg_b):
+    def alu(self, op, reg_a, reg_b=0):
         """ALU operations."""
 
         if op == "ADD":
@@ -90,6 +74,18 @@ class CPU:
                 self.flag = 0b00000010
             elif self.reg[reg_a] == self.reg[reg_b]:
                 self.flag = 0b00000001
+        elif op == "AND":
+            self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
+        elif op == "OR":
+            self.reg[reg_a] = self.reg[reg_a] | self.reg[reg_b]
+        elif op == "XOR":
+            self.reg[reg_a] = self.reg[reg_a] ^ self.reg[reg_b]
+        elif op == "NOT":
+            self.reg[reg_a] = ~self.reg[reg_a]
+        elif op == "SHL":
+            self.reg[reg_a] = self.reg[reg_a] << self.reg[reg_b]
+        elif op == "SHR":
+            self.reg[reg_a] = self.reg[reg_a] >> self.reg[reg_b]
 
         else:
             raise Exception("Unsupported ALU operation")
@@ -244,7 +240,6 @@ class CPU:
             elif command == JEQ:
                 # if equal flag true, jump to the address stored in the given register.
                 if self.flag & 0b00000001 is 1:
-                    test = self.flag & 0b00000001
                     self.pc = self.reg[self.ram[self.pc + 1]]
                 else:
                     self.pc += 2
