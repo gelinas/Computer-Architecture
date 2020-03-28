@@ -8,9 +8,13 @@ PRN  = 71   # 0b01000111
 PUSH = 69   # 0b01000101
 POP  = 70   # 0b01000110
 CALL = 80   # 0b01010000
+JMP  = 84   # 0b01010100
+JEQ  = 85   # 0b01010101
+JNE  = 86   # 0b01010110
 LDI  = 130  # 0b10000010 
 ADD  = 160  # 0b10100000
 MUL  = 162  # 0b10100010
+CMP  = 167  # 0b10100111
 
 class CPU:
     """Main CPU class."""
@@ -56,23 +60,7 @@ class CPU:
             print("File not found")
             sys.exit(2)
 
-        # # For now, we've just hardcoded a program:
-        # address = 0
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-        # for instruction in program:
-        #     self.ram[address] = instruction
-        #     address += 1
-
-
-    def alu(self, op, reg_a, reg_b):
+    def alu(self, op, reg_a, reg_b=0):
         """ALU operations."""
 
         if op == "ADD":
@@ -86,6 +74,18 @@ class CPU:
                 self.flag = 0b00000010
             elif self.reg[reg_a] == self.reg[reg_b]:
                 self.flag = 0b00000001
+        elif op == "AND":
+            self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
+        elif op == "OR":
+            self.reg[reg_a] = self.reg[reg_a] | self.reg[reg_b]
+        elif op == "XOR":
+            self.reg[reg_a] = self.reg[reg_a] ^ self.reg[reg_b]
+        elif op == "NOT":
+            self.reg[reg_a] = ~self.reg[reg_a]
+        elif op == "SHL":
+            self.reg[reg_a] = self.reg[reg_a] << self.reg[reg_b]
+        elif op == "SHR":
+            self.reg[reg_a] = self.reg[reg_a] >> self.reg[reg_b]
 
         else:
             raise Exception("Unsupported ALU operation")
@@ -139,6 +139,7 @@ class CPU:
                 # data to load in register in self.pc + 2
                 reg_addr = self.ram[self.pc + 1] 
                 data = self.ram[self.pc + 2]
+                # print(f"data loaded {data:>08b}")
                 self.reg[reg_addr] = data
                 self.pc += 3
 
@@ -148,6 +149,18 @@ class CPU:
                 reg_addr = self.ram[self.pc + 1] 
                 print(self.reg[reg_addr])
                 self.pc += 2
+
+            elif command == CMP:
+                # compares operands a and b stored in the register
+                # register addresses for operand a in self.pc + 1 
+                # register address for operand b in self.pc + 2
+                # return result to flag
+                # implement with ALU
+                op_a_addr = self.ram[self.pc + 1]
+                op_b_addr = self.ram[self.pc + 2]
+                self.alu("CMP", op_a_addr, op_b_addr)
+                # print(f"comparison result: {self.flag:>0b}")
+                self.pc += 3
 
             elif command == ADD:
                 # adds operands a and b stored in the register
@@ -220,7 +233,24 @@ class CPU:
                 self.pc = self.ram[self.reg[self.sp]]
                 self.reg[self.sp] += 1
 
+            elif command == JMP:
+                # If `equal` flag is set (true), jump to the address stored in the given register.
+                self.pc = self.reg[self.ram[self.pc + 1]]
+
+            elif command == JEQ:
+                # if equal flag true, jump to the address stored in the given register.
+                if self.flag & 0b00000001 is 1:
+                    self.pc = self.reg[self.ram[self.pc + 1]]
+                else:
+                    self.pc += 2
+
+            elif command == JNE:
+                # if equal flag false, jump to the address stored in the given register.
+                if self.flag & 0b00000001 is 0:
+                    self.pc = self.reg[self.ram[self.pc + 1]]
+                else:
+                    self.pc += 2
 
             else:
-                print(f"Unknown instruction: {command}")
+                print(f"Unknown instruction: {command:>08b}")
                 sys.exit(1)  
